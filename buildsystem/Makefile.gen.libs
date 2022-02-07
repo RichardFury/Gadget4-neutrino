@@ -1,0 +1,8 @@
+GSL_INCL   = -I/home/rui/library/gsl/include
+GSL_LIBS   = -L/home/rui/library/gsl/lib
+FFTW_INCL  = -I/home/rui/library/fftw3/include
+FFTW_LIBS  = -L/home/rui/library/fftw3/lib
+HDF5_INCL  = -I/home/rui/library/hdf5/include
+HDF5_LIBS  = -L/home/rui/library/hdf5/lib  
+HWLOC_INCL = -I/home/rui/library/hwloc/include
+HWLOC_LIBS = -L/home/rui/library/hwloc/lib
