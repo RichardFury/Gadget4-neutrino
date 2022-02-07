@@ -29,7 +29,11 @@ void global_data_all_processes::set_cosmo_factors_for_current_time(void)
       cf_afac1    = pow(Time, 3 * GAMMA_MINUS1);
       cf_afac2    = 1 / pow(Time, 3 * GAMMA - 2);
       cf_afac3    = pow(Time, 3 * (1 - GAMMA) / 2.0);
+#ifdef NEUTRINO
+      cf_hubble_a = cf_H = NuSfr.hubble_function_nu(Time);
+#else
       cf_hubble_a = cf_H = Driftfac.hubble_function(Time);
+#endif  // NEUTRINO
       cf_atime_hubble_a  = Time * cf_hubble_a;
       cf_atime2_hubble_a = Time * Time * cf_hubble_a;
       cf_redshift        = 1 / Time - 1;
