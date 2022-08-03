@@ -159,6 +159,10 @@ void pm_periodic::pm_init_periodic(simparticles *Sp_ptr)
 
   pmforce_setup_tallbox_kernel();
 #endif
+
+#ifdef NEUTRINO
+  NeutrinoPkInit();
+#endif  // NEUTRINO
 }
 
 /* Below, the two functions
@@ -1967,6 +1971,10 @@ void pm_periodic::pmforce_periodic(int mode, int *typelist)
 #endif
         }
 
+#ifdef NEUTRINO
+      NeutrinoPkGenerate();
+#endif  // NEUTRINO
+
 #ifndef GRAVITY_TALLBOX
 #ifdef FFT_COLUMN_BASED
       if(myplan.second_transposed_firstcol == 0)
@@ -1976,6 +1984,12 @@ void pm_periodic::pmforce_periodic(int mode, int *typelist)
         fft_of_rhogrid[0][0] = fft_of_rhogrid[0][1] = 0.0;
 #endif
 #endif
+
+#ifdef NEUTRINO
+      if(All.NeutrinoScheme > 1.5 && All.Time > All.TimeBegin && ThisTask == 0)
+        Printf("here done the %.1f correction step %d\n", All.NeutrinoScheme, All.NumCurrentTiStep)
+#endif  // NEUTRINO
+
 
         /* Do the inverse FFT to get the potential/forces */
 

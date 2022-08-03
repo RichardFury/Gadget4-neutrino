@@ -363,34 +363,25 @@ struct global_data_all_processes : public parameters
   double T_Neutrino_0;
   double NeutrinoScheme;
   double FrstrInterval;
-  double Xi_3;
-  double Mass_1;
   char Ratio_Nu_CDM_Txt[MAXLEN_PATH];
   char Nu_Pk_Txt[MAXLEN_PATH];
 
-  /*other parameters may be used in the module neutrino*/
+  /*other parameters may be used in the module neutrino */
   double Omega2;
   double H0;
-  double Rhocr; /*critical density at z=0*/
+  double Rhocr; /*critical density at z=0 */
   double Omega_Nu0_Expansion;
   double Omega_Nu0_Frstr;
   double Unittrans;
-  double Mass_2;
-  double Mass_3;
-  double Xi_1;
-  double Xi_2;
   int Time_Of_Step;
   double A_Last_PM_Step;
-  double NumDensity0;
-  double NumDensity1;
-  double NumDensity2;
-  double NumDensity3;
+  double NumDensity_0;
 
-#ifdef STERILE
-  double Mass_4;
-  double Xi_4;
-  double NumDensity4;
-#endif  // STERILE
+  double NuMass[6];
+  double Xi[6];
+  double NumDensity[6];
+  double Neff; /* Delta_Neff will control the thermalization of sterile neutrino */
+  int NNeutrino; /* determine number of neutrino, active and sterile neutrino */
 
 #endif
 

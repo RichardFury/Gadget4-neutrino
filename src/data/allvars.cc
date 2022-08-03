@@ -209,8 +209,8 @@ void global_data_all_processes::register_parameters(void)
   add_param("T_Neutrino_0", &T_Neutrino_0, PARAM_DOUBLE, PARAM_FIXED);
   add_param("NeutrinoScheme", &NeutrinoScheme, PARAM_DOUBLE, PARAM_FIXED);
   add_param("FrstrInterval", &FrstrInterval, PARAM_INT, PARAM_FIXED);
-  add_param("Xi_3", &Xi_3, PARAM_DOUBLE, PARAM_FIXED);
-  add_param("Mass_1", &Mass_1, PARAM_DOUBLE, PARAM_FIXED);
+  add_param("Xi_3", &Xi[2], PARAM_DOUBLE, PARAM_FIXED);
+  add_param("Mass_1", &Mass[0], PARAM_DOUBLE, PARAM_FIXED);
   add_param("TimeOfStep", &TimeOfStep, PARAM_INT, PARAM_FIXED);
   add_param("PhiParam", &PhiParam, PARAM_INT, PARAM_FIXED);
   add_param("DeductionFromE", &DedunctionFormE, PARAM_INT, PARAM_FIXED);
@@ -219,6 +219,12 @@ void global_data_all_processes::register_parameters(void)
   add_param("LeptonAsymmetry", &LeptonAsymmetry, PARAM_INT, PARAM_FIXED);
   add_param("Ratio_Nu_CDM_Txt", &Ratio_Nu_CDM_Txt, PARAM_STRING, PARAM_CHANGEABLE);
   add_param("Nu_Pk_Txt", &Nu_Pk_Txt, PARAM_STRING, PARAM_CHANGEABLE);
+#ifdef STERILE
+  add_param("Xi_Sterile", &Xi[3], PARAM_DOUBLE, PARAM_FIXED);
+  add_param("Mass_sterile", &Mass[3], PARAM_DOUBLE, PARAM_FIXED);
+  add_param('Neff', &Neff, PARAM_DOUBLE, PARAM_CHANGEABLE);
+#endif  // STERILE
+
 #endif
 }
 

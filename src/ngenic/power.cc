@@ -217,7 +217,12 @@ double ngenic::ngenic_tk_eh(double k) /* from Martin White */
 
   /* other input parameters */
 
+#ifdef NEUTRINO
+  omegam = All.Omega2;
+#else
   omegam = All.Omega0;
+#endif  // NEUTRINO
+  
   ombh2  = All.OmegaBaryon * All.HubbleParam * All.HubbleParam;
 
   if(All.OmegaBaryon == 0)
@@ -303,7 +308,24 @@ double ngenic::ngenic_growth(double a)
 {
   double hubble_a;
 
+#ifdef NEUTRINO
+  double rhoneu;
+  if(All.expan_on)
+    {
+      rhoneu = 0.;
+      for(int i = 0; i < All.NNeutrino; i++)
+        {
+          rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+        }
+    }
+  else
+    {
+      rhoneu = neutrino_integration(a, 0., 0.) * All.NNeutrino;
+    }
+  hubble_a = sqrt(All.Omega2 / (a * a * a) + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) / (a * a) + All.OmegaLambda + rhoneu);
+#else
   hubble_a = sqrt(All.Omega0 / (a * a * a) + (1 - All.Omega0 - All.OmegaLambda) / (a * a) + All.OmegaLambda);
+#endif  // NEUTRINO
 
   const int worksize = 100000;
 
@@ -324,7 +346,25 @@ double ngenic::ngenic_f1_omega(double a)
 {
   double omega_a;
 
-  omega_a = All.Omega0 / (All.Omega0 + a * (1 - All.Omega0 - All.OmegaLambda) + a * a * a * All.OmegaLambda);
+#ifdef NEUTRINO
+  double rhoneu;
+  if(All.expan_on)
+    {
+      rhoneu = 0.;
+      for(int i = 0; i < All.NNeutrino; i++)
+        {
+          rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+        }
+    }
+  else
+    {
+      rhoneu = neutrino_integration(a, 0., 0.) * All.NNeutrino;
+    }
+  omega_a = All.Omega2 / (All.Omega2 + a * (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) + a * a * a * (All.OmegaLambda +
+                  rhoneu));
+#else
+  omega_a  = All.Omega0 / (All.Omega0 + a * (1 - All.Omega0 - All.OmegaLambda) + a * a * a * All.OmegaLambda);
+#endif  // NEUTRINO
 
   return pow(omega_a, 0.6);
 }
@@ -333,7 +373,25 @@ double ngenic::ngenic_f2_omega(double a)
 {
   double omega_a;
 
-  omega_a = All.Omega0 / (All.Omega0 + a * (1 - All.Omega0 - All.OmegaLambda) + a * a * a * All.OmegaLambda);
+#ifdef NEUTRINO
+  double rhoneu;
+  if(All.expan_on)
+    {
+      rhoneu = 0.;
+      for(int i = 0; i < All.NNeutrino; i++)
+        {
+          rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+        }
+    }
+  else
+    {
+      rhoneu = neutrino_integration(a, 0., 0.) * All.NNeutrino;
+    }
+  omega_a = All.Omega2 /
+            (All.Omega2 + a * (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) + a * a * a * (All.OmegaLambda + rhoneu));
+#else
+  omega_a  = All.Omega0 / (All.Omega0 + a * (1 - All.Omega0 - All.OmegaLambda) + a * a * a * All.OmegaLambda);
+#endif  // NEUTRINO
 
   return 2 * pow(omega_a, 4.0 / 7);
 }
