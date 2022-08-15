@@ -176,6 +176,7 @@ INITIAL_CONDITIONS_CONTAIN_ENTROPY
 #NGENIC_FIX_MODE_AMPLITUDES                   # when activated, this leaves the mode amplitudes at sqrt(P(k)), instead of sampling from a Rayleigh distribution
 #NGENIC_MIRROR_PHASES                         # if this is activated, all phases are turned by 180 degrees
 #NGENIC_TEST                                  # can be used to create ICs, measure the power spectrum, and then stop
+#CAMBNOLOG                                    # allow input CAMB powerspectrum without log of data
 
 
 #----------------------------------------Parallelization options
@@ -220,4 +221,9 @@ INITIAL_CONDITIONS_CONTAIN_ENTROPY
 #EWALD_TEST                                   # a development test for the Ewald tables
 #STOP_AFTER_STEP=10                           # ends a simulation after the specified timestep (to simplify scalability tests)
 #TREE_NO_SAFETY_BOX                           # when set, this disables the geometric 'near node' protection
+
+#---------------------------------------- Neutrino
+
+#NEUTRINO
+#STERILE=4
 

@@ -1345,6 +1345,9 @@ and terminates.
 
 -------
 
+**CAMBNOLOG**
+
+Just modify input to make NgenIC suitable for CAMB output
 
 
 MPI related settings                                            {#mpi}
@@ -1607,4 +1610,20 @@ When enabled, this disables the geometric 'near node' protection,
 i.e. for the one-sided tree, one may then be closer to a node's center
 than 1.5 times the node size, and for FMM, adjacent nodes may
 interact.
+
+-------
+
+Neutrino						{#neutrino}
+========
+
+**NEUTRINO**
+
+This option decides whether do neutrino correction.
+
+-------
+
+**STERILE**
+
+This option decides whether consider sterile neutrino.
+
 

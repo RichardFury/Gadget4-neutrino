@@ -218,7 +218,7 @@ void sim::begrun1(const char *parameterFile)
 #endif
 
 #ifdef NEUTRINO
-  NuSfr.NuParamCalculate();
+  NuParamCalculate();
 #endif  // NEUTRINO
 
 

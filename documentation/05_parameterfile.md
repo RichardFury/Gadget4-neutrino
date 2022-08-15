@@ -1239,3 +1239,103 @@ This parameter is only active when `EXTERNALGRAVITY_STATICHQ` is
 enabled, and then gives the total mass (in internal units) of the
 halos that is added as a static potential to the force computation.
 
+-------
+
+Neutrino
+========					       {#nusfr}
+
+
+**DeductionFromDE**
+
+This parameter decides whether the part of neutrino dedected from dark
+energy or not. 
+
+-------
+
+**ExpanOn**
+
+This parameter decides whether neutrino expan with cosmological expansion.
+
+-------
+
+**FrstrInterval**
+
+original author Carton Zheng did not mention it. It seems related with neutrino 
+freestreaming calculation.
+
+-------
+
+**LeptonAsymmetry**
+
+This parameter control the chemical potential of neutrino. 
+
+-------
+
+**MassHierarchy**
+
+Neutrino has normal or inverted hierarchy. This parameter controls whether 3 
+active neutrino is normal hierarchy or inverted hierarchy, or even identical.
+
+-------
+
+**Mass_1**
+
+This parameter inputs the lightest neutrino mass.
+
+-------
+
+**Mass_sterile**
+
+THis parameter inputs sterile neutrino mass.
+
+-------
+
+**NeutrinoScheme**        4
+
+Do not care this parameter, ususally it is setted as 4.
+
+-------
+
+**Nu_Pk_Txt**
+
+This parameter gives the path of neutrino power spectrum at initial redshift.
+
+-------
+
+**PhiParam**
+
+Don't know.
+
+-------
+
+**Ratio_Nu_CDM_Txt**
+
+This parameter gives the path of neutrino fraction with respect to CDM.
+
+-------
+
+**T_Neutrino_0**
+
+This parameter inputs the neutrino temperature at z = 0.
+
+-------
+
+**TimeOfStep**
+
+Don't know.
+
+-------
+
+**Xi_3**
+
+This parameter inputs the 3rd neutrino chemical potential.
+
+-------
+
+**Xi_Sterile**
+
+This parameter inputs the sterile neutrino chemical potential.
+
+**Number_Neutrino**
+
+This parameter determines the number of neutrino types.

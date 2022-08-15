@@ -22,6 +22,7 @@
 
 #include "../data/dtypes.h"
 #include "../main/main.h"
+#include "../neutrino/neutrino.h"
 #include "gadgetconfig.h"
 
 class driftfac
@@ -63,7 +64,7 @@ class driftfac
   static double drift_integ(double a, void *param)
   {
 #ifdef NEUTRINO
-    double h = NuSfr.hubble_function_nu(a);
+    double h = hubble_function_nu(a);
 #else
     double h = hubble_function(a);
 #endif  // NEUTRINO
@@ -74,7 +75,7 @@ class driftfac
   static double gravkick_integ(double a, void *param)
   {
 #ifdef NEUTRINO
-    double h = NuSfr.hubble_function_nu(a);
+    double h = hubble_function_nu(a);
 #else
     double h = hubble_function(a);
 #endif  // NEUTRINO
@@ -85,7 +86,7 @@ class driftfac
   static double hydrokick_integ(double a, void *param)
   {
 #ifdef NEUTRINO
-    double h = NuSfr.hubble_function_nu(a);
+    double h = hubble_function_nu(a);
 #else
     double h = hubble_function(a);
 #endif  // NEUTRINO

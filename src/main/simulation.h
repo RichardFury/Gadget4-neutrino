@@ -16,6 +16,7 @@
 
 #include <mpi.h>
 
+#include "../neutrino/neutrino.h"
 #include "../cooling_sfr/cooling.h"
 #include "../data/allvars.h"
 #include "../data/constants.h"
@@ -78,10 +79,6 @@ class sim : public pinning, public test_io_bandwidth
 #ifdef COOLING
   coolsfr CoolSfr{Communicator};
 #endif
-
- #ifdef NEUTRINO
-  nusfr NuSfr{Communicator};
-#endif  // NEUTRINO
 
 #ifdef NGENIC
   ngenic Ngenic{Communicator, &Sp};

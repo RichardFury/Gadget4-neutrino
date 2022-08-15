@@ -161,7 +161,7 @@ void pm_periodic::pm_init_periodic(simparticles *Sp_ptr)
 #endif
 
 #ifdef NEUTRINO
-  NeutrinoPkInit();
+  NuSfr.NeutrinoPkInit();
 #endif  // NEUTRINO
 }
 
@@ -1972,7 +1972,7 @@ void pm_periodic::pmforce_periodic(int mode, int *typelist)
         }
 
 #ifdef NEUTRINO
-      NeutrinoPkGenerate();
+      NuSfr.NeutrinoPkGenerate(myplan, fft_of_rhogrid);
 #endif  // NEUTRINO
 
 #ifndef GRAVITY_TALLBOX
@@ -1987,7 +1987,7 @@ void pm_periodic::pmforce_periodic(int mode, int *typelist)
 
 #ifdef NEUTRINO
       if(All.NeutrinoScheme > 1.5 && All.Time > All.TimeBegin && ThisTask == 0)
-        Printf("here done the %.1f correction step %d\n", All.NeutrinoScheme, All.NumCurrentTiStep)
+        printf("here done the %.1f correction step %d\n", All.NeutrinoScheme, All.NumCurrentTiStep);
 #endif  // NEUTRINO
 
 

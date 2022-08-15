@@ -356,13 +356,13 @@ struct global_data_all_processes : public parameters
   /*parameters in the parameterfile*/
   int TimeOfStep;
   int PhiParam;
-  int DedunctionFormDE;
+  int DeductionFromDE;
   int ExpanOn;
   int MassHierarchy;
   int LeptonAsymmetry;
   double T_Neutrino_0;
   double NeutrinoScheme;
-  double FrstrInterval;
+  int FrstrInterval;
   char Ratio_Nu_CDM_Txt[MAXLEN_PATH];
   char Nu_Pk_Txt[MAXLEN_PATH];
 
@@ -380,9 +380,10 @@ struct global_data_all_processes : public parameters
   double NuMass[6];
   double Xi[6];
   double NumDensity[6];
-  double Neff; /* Delta_Neff will control the thermalization of sterile neutrino */
   int NNeutrino; /* determine number of neutrino, active and sterile neutrino */
-
+#ifdef STERILE
+  double Neff; /* Delta_Neff will control the thermalization of sterile neutrino */
+#endif
 #endif
 
 

@@ -22,6 +22,7 @@
 #include "../data/allvars.h"
 #include "../data/dtypes.h"
 #include "../time_integration/driftfac.h"
+#include "../neutrino/neutrino.h"
 
 void driftfac::init_drift_table(void)
 {

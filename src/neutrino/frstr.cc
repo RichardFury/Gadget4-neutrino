@@ -11,7 +11,6 @@
  *	\brief function for free streaming calculations and xi calculation.
  */
 
-#ifdef NEUTRINO
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
@@ -19,13 +18,12 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
-
-#include <gsl/gsl_integration>
+#include <gsl/gsl_integration.h>
 
 #include "../data/allvars.h"
 #include "../neutrino/neutrino.h"
 
-double nusfr::cal_xi2(double xi3)
+double Cal_Xi2(double xi3)
 {
   double AA, BB, CC, DD, t12, t13, s13, s23, c23, s12, c12, c13, r23;
   double xi2, L3, L2;
@@ -60,8 +58,8 @@ double nusfr::cal_xi2(double xi3)
   return xi2;
 }
 
-double nusfr::cal_xi1(double xi2, double xi3) {
-  double s13, s23, c23, s12, c12, c13, r23;
+double Cal_Xi1(double xi2, double xi3) {
+  double s13, s12, s23, c12, c13, c23;
   double xi1, L3, L2, L1;
   int i;
 
@@ -87,7 +85,7 @@ double nusfr::cal_xi1(double xi2, double xi3) {
   return xi1;
 }
 
-double nusfr::neutrino_partition(double pot, void* par) {
+double neutrino_partition(double pot, void* par) {
   struct neu_params* params = (struct neu_params*)par;
   double part;
   double Tneu    = (params->x);
@@ -103,7 +101,7 @@ double nusfr::neutrino_partition(double pot, void* par) {
   return part;
 }
 
-double nusfr::neutrino_integration(double a, double m, double xi)
+double neutrino_integration(double a, double m, double xi)
 {
 #define WORKSIZE2 100000
   gsl_function F2;
@@ -123,8 +121,8 @@ double nusfr::neutrino_integration(double a, double m, double xi)
   roneu = inte_result * All.Unittrans * pow(Tneu, 4);
   roneu = roneu / All.Rhocr;
 
-  // printf("mass %f xi %f a %f roneu %f rocr %f unittrans %f inte_result %f\n", m, xi, a, roneu, All.rocr *1e15, All.unittrans*1e15,
-  // inte_result);
+   //printf("mass %f xi %f a %f roneu %f rocr %f unittrans %f inte_result %f\n", m, xi, a, roneu, All.Rhocr *1e15, All.Unittrans*1e15,
+   //inte_result);
 
   gsl_integration_workspace_free(workspace2);
   return roneu;
@@ -141,7 +139,14 @@ double nusfr::hubble(double a)
       roneu = 0.0;
       for(i = 0; i < All.NNeutrino; i++)
         {
+#ifdef STERILE
+          if(i == STERILE)
+            {
+              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+#else
           roneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif
         }
     }
 
@@ -153,7 +158,7 @@ double nusfr::hubble(double a)
   roneu *= All.Rhocr;
 
   rototal = rom + roneu + rolambda;
-  hub     = sqrt(8 * M_PI * Gr * rototal / 3) / c;
+  hub     = sqrt(8 * M_PI * Gr * rototal / 3) / clight;
 
   return hub;
 }
@@ -290,21 +295,21 @@ double nusfr::frstr(double k, double pk0_nu, double pk0_cdm, double pk1_cdm, dou
 
               if(All.PhiParam == 1)
                 {
-                  phi0 = phi(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(c, 3);
-                  phi1 = phi(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(c, 3);
+                  phi0 = phi(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(clight, 3);
+                  phi1 = phi(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(clight, 3);
                 }
 
               if(All.PhiParam == 2)
                 {
-                  phi0 = phi_expansion(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(c, 3);
-                  phi1 = phi_expansion(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(c, 3);
+                  phi0 = phi_expansion(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(clight, 3);
+                  phi1 = phi_expansion(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(clight, 3);
                   // printf("phi0 %f i %d j %d k %f\n", phi0, i, j, k);
                 }
 
               if(All.PhiParam == 3)
                 {
-                  phi0 = phi_fit(k * (array2[i] - array2[j - 1]), mass, array1[j - 1]) * mpc_to_m / pow(c, 3);
-                  phi1 = phi_fit(k * (array2[i] - array2[j]), mass, array1[j]) * mpc_to_m / pow(c, 3);
+                  phi0 = phi_fit(k * (array2[i] - array2[j - 1]), mass, array1[j - 1]) * mpc_to_m / pow(clight, 3);
+                  phi1 = phi_fit(k * (array2[i] - array2[j]), mass, array1[j]) * mpc_to_m / pow(clight, 3);
                   // printf("phi0 %f i %d j %d ti %f tj %f\n", phi0, i, j, array2[i], array2[j-1]);
                 }
 
@@ -346,20 +351,20 @@ double nusfr::frstr(double k, double pk0_nu, double pk0_cdm, double pk1_cdm, dou
 
                   if(All.PhiParam == 1)
                     {
-                      phi0 = phi(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(c, 3);
-                      phi1 = phi(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(c, 3);
+                      phi0 = phi(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(clight, 3);
+                      phi1 = phi(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(clight, 3);
                     }
 
                   if(All.PhiParam == 2)
                     {
-                      phi0 = phi_expansion(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(c, 3);
-                      phi1 = phi_expansion(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(c, 3);
+                      phi0 = phi_expansion(k * (array2[i] - array2[j - 1]), mass, xi, array1[j - 1]) * mpc_to_m / pow(clight, 3);
+                      phi1 = phi_expansion(k * (array2[i] - array2[j]), mass, xi, array1[j]) * mpc_to_m / pow(clight, 3);
                     }
 
                   if(All.PhiParam == 3)
                     {
-                      phi0 = phi_fit(k * (array2[i] - array2[j - 1]), mass, array1[j - 1]) * mpc_to_m / pow(c, 3);
-                      phi1 = phi_fit(k * (array2[i] - array2[j]), mass, array1[j]) * mpc_to_m / pow(c, 3);
+                      phi0 = phi_fit(k * (array2[i] - array2[j - 1]), mass, array1[j - 1]) * mpc_to_m / pow(clight, 3);
+                      phi1 = phi_fit(k * (array2[i] - array2[j]), mass, array1[j]) * mpc_to_m / pow(clight, 3);
                     }
 
                   f0 = phi0 * array1[j - 1] * (array2[i] - array2[j - 1]) * onu_temp0 * k2[j - 1] /
@@ -380,7 +385,7 @@ double nusfr::frstr(double k, double pk0_nu, double pk0_cdm, double pk1_cdm, dou
   return k2[All.FrstrInterval];
 }
 
-double nusfr::phi_integrand(double u, void *par)
+double phi_integrand(double u, void *par)
 {
   double up, down1, down2, T;
 
@@ -416,7 +421,7 @@ double nusfr::phi_integrand(double u, void *par)
   return up / down1 + up / down2;
 }
 
-double nusfr::phi_to_deduct(double u, void *par)
+double phi_to_deduct(double u, void *par)
 {
   double up, down1, down2, T;
 
@@ -626,13 +631,13 @@ double nusfr::phi_fit(double q, double mass, double a)
   return fit;
 }
 
-double nusfr::numdens_integrand(double x, void *par)
+double numdens_integrand(double x, void *par)
 {
   double xi = *(double *)par;
   return x * x / (exp(x - xi) + 1.) + x * x / (exp(x + xi) + 1.);
 }
 
-double nusfr::numdens(double xi)
+double numdens(double xi)
 {
 #define WORKSIZE2 100000
   gsl_function F;
@@ -651,4 +656,3 @@ double nusfr::numdens(double xi)
 }
 
 
-#endif  // NEUTRINO

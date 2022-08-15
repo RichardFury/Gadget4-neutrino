@@ -213,6 +213,12 @@ endif
 ##########################################
 SUBDIRS += .
 
+ifeq (NEUTRINO,$(findstring NEUTRINO, $(CONFIGVARS)))
+SUBDIRS += neutrino
+OBJS    += neutrino/frstr.o neutrino/neutrino.o
+INCL    += neutrino/neutrino.h
+endif
+
 
 SUBDIRS += main
 OBJS    += main/begrun.o main/init.o main/main.o main/run.o
@@ -385,7 +391,6 @@ SUBDIRS += debug_md5
 OBJS    += debug_md5/calc_checksum.o debug_md5/Md5.o
 INCL    += debug_md5/Md5.h
 endif
-
 
 ################################
 #determine the needed libraries#

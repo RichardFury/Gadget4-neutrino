@@ -33,3 +33,6 @@ make -j 8 DIR=examples/G2-gassphere
 
 # low resolution cosmological simulation with gas
 make -j 8 DIR=examples/G2-lcdm-gas 
+
+# LSS simulation with neutrino
+make -j 8 DIR=examples/G2-neutrino

@@ -30,7 +30,7 @@ void global_data_all_processes::set_cosmo_factors_for_current_time(void)
       cf_afac2    = 1 / pow(Time, 3 * GAMMA - 2);
       cf_afac3    = pow(Time, 3 * (1 - GAMMA) / 2.0);
 #ifdef NEUTRINO
-      cf_hubble_a = cf_H = NuSfr.hubble_function_nu(Time);
+      cf_hubble_a = cf_H = hubble_function_nu(Time);
 #else
       cf_hubble_a = cf_H = Driftfac.hubble_function(Time);
 #endif  // NEUTRINO
@@ -210,18 +210,19 @@ void global_data_all_processes::register_parameters(void)
   add_param("NeutrinoScheme", &NeutrinoScheme, PARAM_DOUBLE, PARAM_FIXED);
   add_param("FrstrInterval", &FrstrInterval, PARAM_INT, PARAM_FIXED);
   add_param("Xi_3", &Xi[2], PARAM_DOUBLE, PARAM_FIXED);
-  add_param("Mass_1", &Mass[0], PARAM_DOUBLE, PARAM_FIXED);
+  add_param("Mass_1", &NuMass[0], PARAM_DOUBLE, PARAM_FIXED);
   add_param("TimeOfStep", &TimeOfStep, PARAM_INT, PARAM_FIXED);
   add_param("PhiParam", &PhiParam, PARAM_INT, PARAM_FIXED);
-  add_param("DeductionFromE", &DedunctionFormE, PARAM_INT, PARAM_FIXED);
+  add_param("DeductionFromDE", &DeductionFromDE, PARAM_INT, PARAM_FIXED);
   add_param("ExpanOn", &ExpanOn, PARAM_INT, PARAM_FIXED);
   add_param("MassHierarchy", &MassHierarchy, PARAM_INT, PARAM_FIXED);
   add_param("LeptonAsymmetry", &LeptonAsymmetry, PARAM_INT, PARAM_FIXED);
   add_param("Ratio_Nu_CDM_Txt", &Ratio_Nu_CDM_Txt, PARAM_STRING, PARAM_CHANGEABLE);
   add_param("Nu_Pk_Txt", &Nu_Pk_Txt, PARAM_STRING, PARAM_CHANGEABLE);
+  add_param("Number_Neutrino", &NNeutrino, PARAM_INT, PARAM_FIXED);
 #ifdef STERILE
-  add_param("Xi_Sterile", &Xi[3], PARAM_DOUBLE, PARAM_FIXED);
-  add_param("Mass_sterile", &Mass[3], PARAM_DOUBLE, PARAM_FIXED);
+  add_param("Xi_Sterile", &Xi[STERILE], PARAM_DOUBLE, PARAM_FIXED);
+  add_param("Mass_sterile", &NuMass[STERILE], PARAM_DOUBLE, PARAM_FIXED);
   add_param('Neff', &Neff, PARAM_DOUBLE, PARAM_CHANGEABLE);
 #endif  // STERILE
 

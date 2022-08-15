@@ -108,8 +108,14 @@ void ngenic::read_power_table(void)
 
       if(fscanf(fd, " %lg %lg ", &k, &p) == 2)
         {
+#ifdef CAMBNOLOG
+          p *= pow((All.InputSpectrum_UnitLength_in_cm / All.UnitLength_in_cm), 3);
+          PowerTable[NPowerTable].logk = log10(k);
+          PowerTable[NPowerTable].logD = log10(p);
+#else
           PowerTable[NPowerTable].logk = k;
           PowerTable[NPowerTable].logD = p;
+#endif
           NPowerTable++;
         }
       else
@@ -196,8 +202,11 @@ double ngenic::ngenic_powerspec_tabulated(double k)
   double logD = (1 - u) * PowerTable[binlow].logD + u * PowerTable[binhigh].logD;
 
   double Delta2 = pow(10.0, logD);
-
+#ifdef CAMBNOLOG
+  double P = Delta2 / pow(2 * M_PI, 3);
+#else
   double P = Norm * Delta2 / (4 * M_PI * kold * kold * kold);
+#endif
 
   return P;
 }
@@ -310,12 +319,19 @@ double ngenic::ngenic_growth(double a)
 
 #ifdef NEUTRINO
   double rhoneu;
-  if(All.expan_on)
+  if(All.ExpanOn)
     {
       rhoneu = 0.;
       for(int i = 0; i < All.NNeutrino; i++)
         {
+#ifdef STERILE
+          if(i == STERILE)
+            {
+              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+#else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif
         }
     }
   else
@@ -348,12 +364,19 @@ double ngenic::ngenic_f1_omega(double a)
 
 #ifdef NEUTRINO
   double rhoneu;
-  if(All.expan_on)
+  if(All.ExpanOn)
     {
       rhoneu = 0.;
       for(int i = 0; i < All.NNeutrino; i++)
         {
+#ifdef STERILE
+          if(i == STERILE)
+            {
+              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+#else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif
         }
     }
   else
@@ -375,12 +398,19 @@ double ngenic::ngenic_f2_omega(double a)
 
 #ifdef NEUTRINO
   double rhoneu;
-  if(All.expan_on)
+  if(All.ExpanOn)
     {
       rhoneu = 0.;
       for(int i = 0; i < All.NNeutrino; i++)
         {
+#ifdef STERILE
+          if(i == STERILE)
+            {
+              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+#else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif
         }
     }
   else

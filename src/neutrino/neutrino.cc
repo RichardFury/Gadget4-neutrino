@@ -11,9 +11,7 @@
  *	\brief module for neutrino evolution
  */
 
-#ifdef NEUTRINO
-
-#include "../neutrino/neutrino.h"
+#include "gadgetconfig.h"
 
 #include <gsl/gsl_rng.h>
 #include <stdio.h>
@@ -23,8 +21,20 @@
 #include "../data/mymalloc.h"
 #include "../logs/logs.h"
 #include "../logs/timer.h"
+#include "../neutrino/neutrino.h"
 #include "../system/system.h"
 #include "../time_integration/timestep.h"
+#include "../neutrino/neutrino.h"
+
+static double *old_pk_b, *old_pk_nu_b;
+static double *rd_array_k, *rd_array_pk;
+static double *output_time_array;
+
+static double *count_b;
+static double *k_array, *k_array0;
+
+static int rd_size_cal;
+static int output_time_size;
 
 /** \brief Compute the evolution of neutrino.
  *
@@ -38,15 +48,15 @@
 #define GRIDz (GRIDZ / 2 + 1)
 #define GRID2 (2 * GRIDz)
 
-void nusfr::NuParamCalculate(void)
+void NuParamCalculate(void)
 {
-  All.H0        = All.Hubble * All.HubbleParam * 1000. / (1E6 * 3.0857E16);
-  All.Rhocr     = (cc * 3.0 * All.H0 * All.H0) / (8.0 * M_PI * Gr);
-  All.Unittrans = pow(kb, 4) / ((pow(hbar, 3)) * (pow(c, 3)) * 2 * M_PI * M_PI);
+  All.H0        = 100. * All.HubbleParam * 1000. / (1E6 * 3.0857E16);
+  All.Rhocr     = (cclight * 3.0 * All.H0 * All.H0) / (8.0 * M_PI * Gr);
+  All.Unittrans = pow(kb, 4) / ((pow(hbar, 3)) * (pow(clight, 3)) * 2 * M_PI * M_PI);
   Check_Neutrinos();
 }
 
-void nusfr::Check_Neutrinos(void)
+void Check_Neutrinos(void)
 {
   switch(All.LeptonAsymmetry)
     {
@@ -77,8 +87,8 @@ void nusfr::Check_Neutrinos(void)
         break;
 
       case 1: /* Inverted */
-        All.Mass_2 = sqrt(All.Mass_1 * All.Mass_1 + 2.32e-3);
-        All.Mass_3 = sqrt(All.Mass_2 * All.Mass_2 + 7.59e-5);
+        All.NuMass[1] = sqrt(All.NuMass[0] * All.NuMass[0] + 2.32e-3);
+        All.NuMass[2] = sqrt(All.NuMass[1] * All.NuMass[1] + 7.59e-5);
         break;
 
       case 2: /* Identical */
@@ -114,16 +124,16 @@ void nusfr::Check_Neutrinos(void)
   if(All.DeductionFromDE)
     {
       All.Omega2 = All.Omega0;
-      All.OmegaLambda -= All.Omega_nu0_expan;
-      All.Omega0 += All.Omega_nu0_expan;
+      All.OmegaLambda -= All.Omega_Nu0_Expansion;
+      All.Omega0 += All.Omega_Nu0_Expansion;
     }
   else
     {
-      All.Omega2      = All.Omega0 - All.Omega_nu0_expan;
+      All.Omega2      = All.Omega0 - All.Omega_Nu0_Expansion;
       All.OmegaLambda = All.OmegaLambda;
     }
 
-  printf("Omega0 = %f Omega2 = %f Omega_Nu_Expansion = %f Omega_Nu_Frstr %f\t", All.Omega0, All.Omega2, All.Omega_Nu0_Expansion,
+  printf("Omega0 = %f\tOmega2 = %f\tOmega_Nu_Expansion = %f\tOmega_Nu_Frstr %f\t", All.Omega0, All.Omega2, All.Omega_Nu0_Expansion,
          All.Omega_Nu0_Frstr);
   printf("Omega_lambda = %f\n", All.OmegaLambda);
 
@@ -135,14 +145,13 @@ void nusfr::Check_Neutrinos(void)
   printf("\n");
 }
 
-
 /* This function aims to calculate the hubble parameter at the current timestep.
  */
-double nusfr::hubble_function_nu(double a)
+double hubble_function_nu(double a)
 {
   double h;
   double rhoneu;
-  if(All.expan_on)
+  if(All.ExpanOn)
     {
       rhoneu = 0.;
       for(int i = 0; i < All.NNeutrino; i++)
@@ -162,7 +171,8 @@ double nusfr::hubble_function_nu(double a)
 void nusfr::NeutrinoPkInit(void)
 {
   double k_interval = 1.005;
-  int num_kbins = (int)(log(sqrt(3.) * PMGRID / 0.95) / log(k_interval));
+  int num_kbins     = (int)(log(sqrt(3.) * PMGRID / 0.95) / log(k_interval));
+
   if(All.NumCurrentTiStep == 0)
     {
       old_pk_b    = (double *)malloc(num_kbins * sizeof(double));
@@ -172,15 +182,14 @@ void nusfr::NeutrinoPkInit(void)
       k_array     = (double *)malloc(num_kbins * sizeof(double));
 
       int ii;
-      double ratio_temp;
-      int rd, rd_size;
+      int rd_size;
 
-      File *fd;
+      FILE *fd;
       double kkk, ppp;
 
       if(!(fd = fopen(All.Ratio_Nu_CDM_Txt, "r")))
         {
-          printf("can't read input spectrum in file '%s'\n", All.ratio_nu_cdm_txt);
+          printf("can't read input spectrum in file '%s'\n", All.Ratio_Nu_CDM_Txt);
         }
 
       rd_size = 0;
@@ -197,10 +206,15 @@ void nusfr::NeutrinoPkInit(void)
         }
       while(1);
       fclose(fd);
-
+      
       rd_array_k  = (double *)malloc(rd_size * sizeof(double));
       rd_array_pk = (double *)malloc(rd_size * sizeof(double));
-
+      
+      if(!(fd = fopen(All.Ratio_Nu_CDM_Txt, "r")))
+        {
+          printf("can't read input spectrum in file '%s'\n", All.Ratio_Nu_CDM_Txt);
+        }
+        
       rd_size = 0;
       do
         {
@@ -218,9 +232,11 @@ void nusfr::NeutrinoPkInit(void)
       while(1);
       fclose(fd);
 
-      FILE *outtimetxt;
-      double aaa;
-      int output_no;
+      rd_size_cal = rd_size;
+      mpi_printf("Neutrino: Finish ratio array reading..\n");
+
+      double aaa, bbb;
+      int output_no = 0;
 
       if(!(fd = fopen(All.OutputListFilename, "r")))
         {
@@ -229,7 +245,7 @@ void nusfr::NeutrinoPkInit(void)
 
       do
         {
-          if(fscanf(fd, "%lg", &aaa) == 1)
+          if(fscanf(fd, " %lg %lg", &aaa, &bbb) == 2)
             {
               output_no++;
             }
@@ -249,7 +265,7 @@ void nusfr::NeutrinoPkInit(void)
 
       do
         {
-          if(fscanf(fd, "%lg", &aaa) == 1)
+          if(fscanf(fd, " %lg %lg", &aaa, &bbb) == 2)
             {
               output_time_array[output_no] = aaa;
               output_no++;
@@ -257,10 +273,20 @@ void nusfr::NeutrinoPkInit(void)
           else
             break;
         }
+      while(1);
+
+      output_time_size = output_no;
+        
+      for (int i = 0; i < output_time_size; i++)
+      {
+        mpi_printf("time no.%d %f\n", i, output_time_array[i]);
+      }
+
+      
       for(ii = 0; ii < num_kbins; ii++)
         {
           old_pk_b[ii] = 0.;
-          for(i = 0; i < All.NNeutrino; i++)
+          for(int i = 0; i < All.NNeutrino; i++)
             {
               old_pk_nu_b[ii * All.NNeutrino + i] = 0.;
             }
@@ -268,14 +294,17 @@ void nusfr::NeutrinoPkInit(void)
     }
 }
 
-void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
+void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex *&fft_of_rhogrid)
 {
+  double kfacx = 2.0 * M_PI / (GRIDX * (All.BoxSize / PMGRID));
+  double kfacy = 2.0 * M_PI / (GRIDY * (All.BoxSize / PMGRID));
+  double kfacz = 2.0 * M_PI / (GRIDZ * (All.BoxSize / PMGRID));
   double k_interval = 1.005;
   int num_kbins     = (int)(log(sqrt(3.) * PMGRID / 0.95) / log(k_interval));
   if(All.NeutrinoScheme == 4.0)
     {
       int b;
-      double start_k = 2. * MPI * 0.95 / (All.BoxSize / 1e3);
+      double start_k = 2. * M_PI * 0.95 / (All.BoxSize / 1e3);
       double kk;
       double *pk_b, *pk_nub;
       pk_b   = (double *)malloc(num_kbins * sizeof(double));
@@ -291,17 +320,16 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
       for(b = 0; b < num_kbins; b++)
         {
           pk_b[b] = 0.;
-          for(i = 0; i < All.NNeutrino; i++)
+          for(int i = 0; i < All.NNeutrino; i++)
             {
               pk_nub[b * All.NNeutrino] = 0.;
             }
           count_b[b] = 0.;
           k_array[b] = sqrt(k_array0[b] * k_array0[b + 1]);
         }
-
-      for(i = 0; i < output_time_size; i++)
+      for(int i = 0; i < output_time_size; i++)
         {
-          if(All.Time >= output_time_array[i] && All.A_Last_PM_Step < output_time_array[i + 1])
+          if(All.Time >= output_time_array[i] && All.A_Last_PM_Step < output_time_array[i])
             {
               if(ThisTask == 0)
                 {
@@ -319,7 +347,7 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
                       if(old_pk_b[nj] > 1e-7)
                         {
                           nu_temp = 0.;
-                          for(j = 0; j < All.NNeutrino; j++)
+                          for(int j = 0; j < All.NNeutrino; j++)
                             {
                               nu_temp += old_pk_nu_b[nj * All.NNeutrino + j] * old_pk_nu_b[nj * All.NNeutrino + j];
                             }
@@ -336,9 +364,9 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
       /* for the 4.0 version correction, we need to calculate the cdm pk first, so need to loop twice: count number
        * in each bin; calculate pk;
        */
-      for(x = 0; x < GRIDX; x++)
-        for(y = myplan.slabstart_y; y < myplan.slabstart_y + myplan.nslab_y; y++)
-          for(z = 0; z < GRIDz; z++)
+      for(int x = 0; x < GRIDX; x++)
+        for(int y = my_plan.slabstart_y; y < my_plan.slabstart_y + my_plan.nslab_y; y++)
+          for(int z = 0; z < GRIDz; z++)
             {
               int xx, yy, zz;
 
@@ -355,22 +383,18 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
               else
                 zz = z;
 
-              double kx = kfacx * xx;
-              double ky = kfacy * yy;
-              double kz = kfacz * zz;
-
-              double k2 = kx * kx + ky * ky + kz * kz;
-              kk        = pow(k2, 0.5) * 2. * M_PI * 1e3 / All.Boxsize;
+              double k2 = xx * xx + yy * yy + zz * zz;
+              kk        = pow(k2, 0.5) * 2. * M_PI * 1e3 / All.BoxSize;
 
 #ifndef FFT_COLUMN_BASED
-              large_array_offset ip = ((large_array_offset)GRIDz) * (GRIDX * (y - myplan.slabstart_y) + x) + z;
+              large_array_offset ip = ((large_array_offset)GRIDz) * (GRIDX * (y - my_plan.slabstart_y) + x) + z;
 #endif
               for(b = 0; b < num_kbins; b++)
                 {
                   if(kk >= k_array0[b] && kk < k_array0[b + 1])
                     {
                       count_b[b] = count_b[b] + 1.;
-                      pk_b[b] += (fft_of_rhogrid[ip].re * fft_of_rhogrid[ip].re + fft_of_rhogrid[ip].im * fft_of_rhogrid[ip].im);
+                      pk_b[b] += (fft_of_rhogrid[ip][0] * fft_of_rhogrid[ip][0] + fft_of_rhogrid[ip][1] * fft_of_rhogrid[ip][1]);
                     }
                 }
             }
@@ -384,16 +408,16 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
                 {
                   old_pk_b[b] = sqrt(pk_b[b] / count_b[b]);
 
-                  for(b = 0; b < rd_size_cal; b++)
+                  for(rd = 0; rd < rd_size_cal; rd++)
                     {
                       if(k_array[b] >= rd_array_k[rd] && k_array[b] < rd_array_k[rd + 1])
                         {
                           ratio_temp = (rd_array_pk[rd] + rd_array_pk[rd + 1]) / 2.;
                         }
                     }
-                  for(i = 0; i < All.NNeutrino; i++)
+                  for(int i = 0; i < All.NNeutrino; i++)
                     {
-                      old_pk_nu_b[b * All.NNeutrino + i] = old_pk_b[b] * sqrt[ratio_temp];
+                      old_pk_nu_b[b * All.NNeutrino + i] = old_pk_b[b] * sqrt(ratio_temp);
                     }
                 }
             }
@@ -404,15 +428,15 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
       fnu              = (double *)malloc(All.NNeutrino * sizeof(double));
       roneu_temp       = (double *)malloc(All.NNeutrino * sizeof(double));
       roneu_temp_total = 0.;
-      for(i = 0; i < All.NNeutrino; i++)
+      for(int i = 0; i < All.NNeutrino; i++)
         {
-          roneu_temp[i] = neutrino_integration(All.Time, All.mass[i], All.xi[i]);
+          roneu_temp[i] = neutrino_integration(All.Time, All.NuMass[i], All.Xi[i]);
           roneu_temp_total += roneu_temp[i];
         }
       fnu_total = 0.;
-      for(i = 0; i < All.NNeutrino; i++)
+      for(int i = 0; i < All.NNeutrino; i++)
         {
-          fnu[i] = roneu_temp[i] / (roneu_temp_total + (All.Omega0 - All.Omega_nu0_frstr) / pow(All.Time, 3));
+          fnu[i] = roneu_temp[i] / (roneu_temp_total + (All.Omega0 - All.Omega_Nu0_Frstr) / pow(All.Time, 3));
           fnu_total += fnu[i];
         }
 
@@ -426,15 +450,15 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
           a_inte_series = (double *)malloc((All.FrstrInterval + 1) * sizeof(double));
           s_inte_series = (double *)malloc((All.FrstrInterval + 1) * sizeof(double));
 
-          for(i = 0; i <= All.FrstrInterval; i++)
+          for(int i = 0; i <= All.FrstrInterval; i++)
             {
               a_inte_series[i] = All.A_Last_PM_Step + i * a_spacing;
             }
           // time series calculation finished
-          for(i = 1; i <= All.FrstrInterval; i++)
+          for(int i = 1; i <= All.FrstrInterval; i++)
             {
               s_inte_series[i] =
-                  a_to_s(i, a_inte_series, All.A_Last_PM_Step, All.Time) * c /
+                  a_to_s(i, a_inte_series, All.A_Last_PM_Step, All.Time) * clight /
                   mpc_to_m;  // this unit is because in later frstr phi integration we removed this unit from the s series
               // printf("time %f i %d\n", s_inte_series[i], i);
             }
@@ -445,7 +469,7 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
               if(count_b[b] > 0)
                 {
                   pk_b[b] = sqrt(pk_b[b] / count_b[b]);
-                  for(i = 0; i < All.NNeutrino; i++)
+                  for(int i = 0; i < All.NNeutrino; i++)
                     {
                       pk_nub[b * All.NNeutrino + i] =
                           frstr(k_array[b], old_pk_nu_b[b * All.NNeutrino + i], old_pk_b[b], pk_b[b], a_inte_series, s_inte_series,
@@ -453,12 +477,11 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
                     }
                 }
             }
-
           // printf("fnu %f xi %f--------------\n", fnu, All.xi_1);
 
-          for(x = 0; x < GRIDX; x++)
-            for(y = myplan.slabstart_y; y < myplan.slabstart_y + myplan.nslab_y; y++)
-              for(z = 0; z < GRIDz; z++)
+          for(int x = 0; x < GRIDX; x++)
+            for(int y = my_plan.slabstart_y; y < my_plan.slabstart_y + my_plan.nslab_y; y++)
+              for(int z = 0; z < GRIDz; z++)
                 {
                   int xx, yy, zz;
 
@@ -475,39 +498,32 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
                   else
                     zz = z;
 
-                  double kx = kfacx * xx;
-                  double ky = kfacy * yy;
-                  double kz = kfacz * zz;
-
-                  double k2 = kx * kx + ky * ky + kz * kz;
-                  kk        = pow(k2, 0.5) * 2. * M_PI * 1e3 / All.Boxsize;
+                  double k2 = xx * xx + yy * yy + zz * zz;
+                  kk        = pow(k2, 0.5) * 2. * M_PI * 1e3 / All.BoxSize;
 
 #ifndef FFT_COLUMN_BASED
-                  large_array_offset ip = ((large_array_offset)GRIDz) * (GRIDX * (y - myplan.slabstart_y) + x) + z;
+                  large_array_offset ip = ((large_array_offset)GRIDz) * (GRIDX * (y - my_plan.slabstart_y) + x) + z;
 #endif
-
-                  int b0 = 0;
                   for(b = 0; b < num_kbins; b++)
                     {
                       if(kk >= k_array0[b] && kk < k_array0[b + 1])
                         {
                           double sum = 0.;
-                          for(i = 0; i < All.NNeutrino; i++)
+                          for(int i = 0; i < All.NNeutrino; i++)
                             {
                               sum += fnu[i] * pk_nub[b * All.NNeutrino + i];
                             }
-                          fft_of_rhogrid[ip].re =
-                              fft_of_rhogrid[ip].re * (1. - fnu_total) + fft_of_rhogrid[ip].re * fabs(sum / pk_b[b]);
-                          fft_of_rhogrid[ip].im =
-                              fft_of_rhogrid[ip].im * (1. - fnu_total) + fft_of_rhogrid[ip].im * fabs(sum / pk_b[b]);
-                          b0 = b;
+                          fft_of_rhogrid[ip][0] =
+                              fft_of_rhogrid[ip][0] * (1. - fnu_total) + fft_of_rhogrid[ip][0] * fabs(sum / pk_b[b]);
+                          fft_of_rhogrid[ip][1] =
+                              fft_of_rhogrid[ip][1] * (1. - fnu_total) + fft_of_rhogrid[ip][1] * fabs(sum / pk_b[b]);
                         }
                     }
                 }
 
           for(b = 0; b < num_kbins; b++)
             {
-              for(i = 0; i < All.NNeutrino; i++)
+              for(int i = 0; i < All.NNeutrino; i++)
                 {
                   old_pk_nu_b[b * All.NNeutrino + i] = pk_nub[b * All.NNeutrino + i];
                 }
@@ -540,7 +556,7 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex &fft_of_rhogrid)
                   if(old_pk_b[nj] > 1e-7)
                     {
                       nu_temp = 0.;
-                      for(i = 0; i < All.NNeutrino; i++)
+                      for(int i = 0; i < All.NNeutrino; i++)
                         {
                           nu_temp += old_pk_nu_b[nj * All.NNeutrino + i] * old_pk_nu_b[nj * All.NNeutrino + i];
                         }

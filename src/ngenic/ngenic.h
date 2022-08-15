@@ -113,7 +113,31 @@ class ngenic : public pm_mpi_fft
 
   static double ngenic_growth_int(double a, void *param)
   {
+#ifdef NEUTRINO
+    double rhoneu;
+    if(All.ExpanOn)
+      {
+        rhoneu = 0.;
+        for(int i = 0; i < All.NNeutrino; i++)
+          {
+#ifdef STERILE
+            if(i == STERILE)
+              {
+                roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              }
+#else
+            rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif
+          }
+      }
+    else
+      {
+        rhoneu = neutrino_integration(a, 0., 0.) * All.NNeutrino;
+      }
+    return pow(a / (All.Omega2 + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) * a + (All.OmegaLambda + rhoneu) * a * a * a), 1.5);
+#else
     return pow(a / (All.Omega0 + (1 - All.Omega0 - All.OmegaLambda) * a + All.OmegaLambda * a * a * a), 1.5);
+#endif
   }
 
   double fnl(double x, double A, double B, double alpha, double beta, double V, double gf) /* Peacock & Dodds formula */
