@@ -12,9 +12,9 @@
 #ifndef PM_PERIODIC_H
 #define PM_PERIODIC_H
 
-#include "gadgetconfig.h"
-
 #include <gsl/gsl_integration.h>
+
+#include "gadgetconfig.h"
 
 #if defined(PMGRID) || defined(NGENIC)
 
@@ -30,10 +30,10 @@
 #include "../domain/domain.h"
 #include "../logs/timer.h"
 #include "../mpi_utils/mpi_utils.h"
+#include "../neutrino/neutrino.h"
 #include "../pm/pm_mpi_fft.h"
 #include "../system/system.h"
 #include "../time_integration/timestep.h"
-#include "../neutrino/neutrino.h"
 
 class pm_periodic : public pm_mpi_fft
 {
@@ -214,28 +214,36 @@ class pm_periodic : public pm_mpi_fft
   {
 
 #ifdef NEUTRINO
-      double rhoneu;
-      double s;
-      if(All.ExpanOn)
+    double rhoneu;
+    double s;
+    if(All.ExpanOn)
       {
-
-          rhoneu = neutrino_integration(a, All.NuMass[0], All.Xi[0]) + neutrino_integration(a, All.NuMass[1], All.Xi[1]) +
-                   neutrino_integration(a, All.NuMass[2], All.Xi[2]);
+        rhoneu = 0.;
+        for(int i = 0; i < All.NNeutrino; i++)
+          {
 #ifdef STERILE
-          rhoneu += neutrino_integration(a, All.NuMass[3], All.Xi[3]);
-#endif  // STERILE
-      }
-      else
-      {
-          rhoneu = neutrino_integration(a, 0., 0.) * 3;
-#ifdef STERILE
-          rhoneu += neutrino_integration(a, 0., 0.);
-#endif  // STERILE
-      }
-      s = All.Omega2 + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) * a + All.OmegaLambda * a * a * a + rhoneu * a * a * a;
-      return pow(a / s, 1.5);
+            if(i == STERILE)
+              {
+                rhoneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              }
+            else
+              {
+                rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              }
 #else
-      return pow(a / (All.Omega0 + (1 - All.Omega0 - All.OmegaLambda) * a + All.OmegaLambda * a * a * a), 1.5);
+            rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif  // STERILE
+          }
+      }
+    else
+      {
+        rhoneu = neutrino_integration(a, 0., 0.) * All.NNeutrino;
+      }
+    s = All.Omega2 + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) * a + All.OmegaLambda * a * a * a +
+        rhoneu * a * a * a;
+    return pow(a / s, 1.5);
+#else
+    return pow(a / (All.Omega0 + (1 - All.Omega0 - All.OmegaLambda) * a + All.OmegaLambda * a * a * a), 1.5);
 #endif  // NEUTRINO
   }
 
@@ -244,27 +252,35 @@ class pm_periodic : public pm_mpi_fft
   double linear_growth(double a)
   {
 #ifdef NEUTRINO
-      double rhoneu;
-      double s;
-      if(All.ExpanOn)
+    double rhoneu;
+    double s;
+    if(All.ExpanOn)
       {
-          rhoneu = neutrino_integration(a, All.NuMass[0], All.Xi[0]) + neutrino_integration(a, All.NuMass[1], All.Xi[1]) +
-                 neutrino_integration(a, All.NuMass[2], All.Xi[2]);
+        rhoneu = 0.;
+        for(int i = 0; i < All.NNeutrino; i++)
+          {
 #ifdef STERILE
-          rhoneu += neutrino_integration(a, All.NuMass[3], All.Xi[3]);
-#endif  // STERILE
-      }
-      else
-      {
-          rhoneu = neutrino_integration(a, 0., 0.) * 3;
-#ifdef STERILE
-          rhoneu += neutrino_integration(a, 0., 0.);
-#endif  // STERILE
-      }
-      s = All.Omega2 / (a * a * a) + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) / (a * a) + All.OmegaLambda + rhoneu;
-      double hubble_a = sqrt(s);
+            if(i == STERILE)
+              {
+                rhoneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              }
+            else
+              {
+                rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              }
 #else
-      double hubble_a = sqrt(All.Omega0 / (a * a * a) + (1 - All.Omega0 - All.OmegaLambda) / (a * a) + All.OmegaLambda);
+            rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif  // STERILE
+          }
+      }
+    else
+      {
+        rhoneu = neutrino_integration(a, 0., 0.) * All.NNeutrino;
+      }
+    s = All.Omega2 / (a * a * a) + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) / (a * a) + All.OmegaLambda + rhoneu;
+    double hubble_a = sqrt(s);
+#else
+    double hubble_a = sqrt(All.Omega0 / (a * a * a) + (1 - All.Omega0 - All.OmegaLambda) / (a * a) + All.OmegaLambda);
 #endif  // NEUTRINO
 
     const int worksize = 100000;

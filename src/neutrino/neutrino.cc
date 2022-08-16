@@ -156,7 +156,18 @@ double hubble_function_nu(double a)
       rhoneu = 0.;
       for(int i = 0; i < All.NNeutrino; i++)
         {
+#ifdef STERILE
+          if(i == STERILE)
+            {
+              rhoneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+          else
+            {
+              rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+#else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+#endif  // STERILE
         }
     }
   else

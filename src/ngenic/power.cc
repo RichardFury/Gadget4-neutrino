@@ -327,11 +327,15 @@ double ngenic::ngenic_growth(double a)
 #ifdef STERILE
           if(i == STERILE)
             {
-              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              rhoneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+            }
+          else
+            {
+              rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
             }
 #else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
-#endif
+#endif  // STERILE
         }
     }
   else
