@@ -1349,6 +1349,15 @@ and terminates.
 
 Just modify input to make NgenIC suitable for CAMB output
 
+-------
+
+**CORRECT_CIC**
+
+An option missed by original Gadget4 documentation. just Correct the 
+density field to be CIC method.
+
+-------
+
 
 MPI related settings                                            {#mpi}
 ====================
@@ -1415,6 +1424,23 @@ uses hypercubes with MPI_Sendrecv as a work-around.
 
 -------
 
+**MPI_HYPERCUBE_ALLTOALL**
+
+Some MPI libraries tend to be unstable for their myMPI_Alltoall. This is
+replacing this with a robust hypercube communication pattern. Not 
+necessarily the fastest, but very robust, scalable and with decent speed.
+
+-------
+
+**ALLOCATE_SHARED_MEMORY_VIA_POSIX**
+
+If this is set, try to use POSIX directly to allocated shared memory in 
+the virtual filesystem /dev/shm, instead of relying on the MPI-3 call
+MPI_Win_allocate_shared() which on some systems executes in a sluggish
+way.
+
+-------
+
 Testing and Debugging options                                    {#tests}
 =============================
 
@@ -1430,6 +1456,8 @@ optimizations entirely to avoid confusing the debugger in some
 situations.
 
 -------
+
+
 
 **DEBUG_ENABLE_FPU_EXCEPTIONS**
 
