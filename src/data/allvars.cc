@@ -223,7 +223,7 @@ void global_data_all_processes::register_parameters(void)
 #ifdef STERILE
   add_param("Xi_Sterile", &Xi[STERILE], PARAM_DOUBLE, PARAM_FIXED);
   add_param("Mass_sterile", &NuMass[STERILE], PARAM_DOUBLE, PARAM_FIXED);
-  add_param('Neff', &Neff, PARAM_DOUBLE, PARAM_CHANGEABLE);
+  add_param("Neff", &Neff, PARAM_DOUBLE, PARAM_CHANGEABLE);
 #endif  // STERILE
 
 #endif
