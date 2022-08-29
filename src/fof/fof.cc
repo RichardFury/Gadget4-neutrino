@@ -542,7 +542,11 @@ double fof<partset>::fof_get_comoving_linking_length(void)
       }
   sumup_large_ints(1, &ndm, &ndmtot, Communicator);
   MPI_Allreduce(&mass, &masstot, 1, MPI_DOUBLE, MPI_SUM, Communicator);
+#ifdef NEUTRINO
+  double rhodm = (All.Omega2 - All.OmegaBaryon) * 3 * All.Hubble * All.Hubble / (8 * M_PI * All.G);
+#else
   double rhodm = (All.Omega0 - All.OmegaBaryon) * 3 * All.Hubble * All.Hubble / (8 * M_PI * All.G);
+#endif
 
   return FOF_LINKLENGTH * pow(masstot / ndmtot / rhodm, 1.0 / 3);
 }

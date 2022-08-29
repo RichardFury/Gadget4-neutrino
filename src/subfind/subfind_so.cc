@@ -31,6 +31,7 @@
 #include "../mpi_utils/generic_comm.h"
 #include "../subfind/subfind.h"
 #include "../system/system.h"
+#include "../neutrino/neutrino.h"
 
 static double *R200, *M200;
 
@@ -239,8 +240,33 @@ template <typename partset>
 double fof<partset>::subfind_get_overdensity_value(int type, double ascale)
 {
   double z = 1 / ascale - 1;
+#ifdef NEUTRINO
+  double rhoneu;
+  if(All.ExpanOn)
+    {
+      rhoneu = 0.;
+      for(int i = 0; i < All.NNeutrino; i++)
+        {
+#ifdef STERILE
+          if(i == STERILE)
+            {
+              roneu += All.Neff * neutrino_integration(ascale, All.NuMass[i], All.Xi[i]);
+            }
+#else
+          rhoneu += neutrino_integration(ascale, All.NuMass[i], All.Xi[i]);
+#endif
+        }
+    }
+    else
+    {
+      rhoneu = neutrino_integration(ascale, 0., 0.) * All.NNeutrino;
+    }
+  double omegaz =
+      All.Omega2 * pow(1 + z, 3) / (All.Omega2 * pow(1 + z, 3) + (1 - All.Omega2 - All.OmegaLambda - All.Omega_Nu0_Expansion) * pow(1 + z, 2) + All.OmegaLambda + rhoneu);
+#else
   double omegaz =
       All.Omega0 * pow(1 + z, 3) / (All.Omega0 * pow(1 + z, 3) + (1 - All.Omega0 - All.OmegaLambda) * pow(1 + z, 2) + All.OmegaLambda);
+#endif
   double x = omegaz - 1;
 
   if(type == 0)
@@ -276,7 +302,11 @@ double fof<partset>::subfind_overdensity(void)
   R200 = (double *)Mem.mymalloc("R200", sizeof(double) * Ngroups);
   M200 = (double *)Mem.mymalloc("M200", sizeof(double) * Ngroups);
 
+#ifdef NEUTRINO
+  double rhoback = 3 * All.Omega2 * All.Hubble * All.Hubble / (8 * M_PI * All.G);
+#else
   double rhoback = 3 * All.Omega0 * All.Hubble * All.Hubble / (8 * M_PI * All.G);
+#endif
 
   double tstart = Logs.second();
 
