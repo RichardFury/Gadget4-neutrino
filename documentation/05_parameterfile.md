@@ -1346,6 +1346,14 @@ This parameter inputs the 3rd neutrino chemical potential.
 
 This parameter inputs the sterile neutrino chemical potential.
 
+-------
+
 **Number_Neutrino**
 
 This parameter determines the number of neutrino types.
+
+-------
+
+**Neff**
+
+This parameter determines the thermalization of sterile neutrino.
