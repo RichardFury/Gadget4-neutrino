@@ -250,7 +250,7 @@ double fof<partset>::subfind_get_overdensity_value(int type, double ascale)
 #ifdef STERILE
           if(i == STERILE)
             {
-              roneu += All.Neff * neutrino_integration(ascale, All.NuMass[i], All.Xi[i]);
+              rhoneu += All.Neff * neutrino_integration(ascale, All.NuMass[i], All.Xi[i]);
             }
 #else
           rhoneu += neutrino_integration(ascale, All.NuMass[i], All.Xi[i]);

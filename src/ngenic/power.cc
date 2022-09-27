@@ -376,7 +376,7 @@ double ngenic::ngenic_f1_omega(double a)
 #ifdef STERILE
           if(i == STERILE)
             {
-              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              rhoneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
             }
 #else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);
@@ -410,7 +410,7 @@ double ngenic::ngenic_f2_omega(double a)
 #ifdef STERILE
           if(i == STERILE)
             {
-              roneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
+              rhoneu += All.Neff * neutrino_integration(a, All.NuMass[i], All.Xi[i]);
             }
 #else
           rhoneu += neutrino_integration(a, All.NuMass[i], All.Xi[i]);

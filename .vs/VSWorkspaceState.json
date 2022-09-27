@@ -1,6 +1,13 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\documentation",
+    "\\src",
+    "\\src\\half",
+    "\\src\\main",
+    "\\src\\neutrino",
+    "\\src\\subfind"
   ],
+  "SelectedNode": "\\src\\subfind\\subfind.cc",
   "PreviewInSolutionExplorer": false
 }
