@@ -382,7 +382,12 @@ double nusfr::frstr(double k, double pk0_nu, double pk0_cdm, double pk1_cdm, dou
           // k1[All.frstr_interval], pk0_nu, phi2[All.frstr_interval] * pk0_nu);
         }
     }
-  return k2[All.FrstrInterval];
+  double outDelta_nu = k2[All.FrstrInterval];
+  free(phi2);
+  free(k1);
+  free(k2);
+  
+  return outDelta_nu;
 }
 
 double phi_integrand(double u, void *par)

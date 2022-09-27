@@ -590,8 +590,12 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex *&fft_of_rhogrid)
             }
         }
 
+      free(a_inte_series);
+      free(s_inte_series);
       free(pk_b);
       free(pk_b_local);
       free(pk_nub);
+      free(fnu);
+      free(roneu_temp);
     }
 }
