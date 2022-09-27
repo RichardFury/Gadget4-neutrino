@@ -418,7 +418,7 @@ double phi_integrand(double u, void *par)
       // expand in taylor
     }
 
-  return up / down1 + up / down2;
+  return up / down1 ;
 }
 
 double phi_to_deduct(double u, void *par)
@@ -448,7 +448,7 @@ double phi_to_deduct(double u, void *par)
       down2 = exp(u / sqrt(1. - u * u * con_ul * con_ul) + xi) + 1.;
     }
 
-  return up / down1 + up / down2;
+  return up / down1 ;
 }
 
 

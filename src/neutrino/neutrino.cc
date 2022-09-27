@@ -30,7 +30,7 @@ static double *old_pk_b, *old_pk_nu_b;
 static double *rd_array_k, *rd_array_pk;
 static double *output_time_array;
 
-static double *count_b;
+static double *count_b, *count_b_local;
 static double *k_array, *k_array0;
 
 static int rd_size_cal;
@@ -186,11 +186,12 @@ void nusfr::NeutrinoPkInit(void)
 
   if(All.NumCurrentTiStep == 0)
     {
-      old_pk_b    = (double *)malloc(num_kbins * sizeof(double));
-      old_pk_nu_b = (double *)malloc(num_kbins * All.NNeutrino * sizeof(double));
-      count_b     = (double *)malloc(num_kbins * sizeof(double));
-      k_array0    = (double *)malloc((num_kbins + 1) * sizeof(double));
-      k_array     = (double *)malloc(num_kbins * sizeof(double));
+      old_pk_b      = (double *)malloc(num_kbins * sizeof(double));
+      old_pk_nu_b   = (double *)malloc(num_kbins * All.NNeutrino * sizeof(double));
+      count_b       = (double *)malloc(num_kbins * sizeof(double));
+      count_b_local = (double *)malloc(num_kbins * sizeof(double));
+      k_array0      = (double *)malloc((num_kbins + 1) * sizeof(double));
+      k_array       = (double *)malloc(num_kbins * sizeof(double));
 
       int ii;
       int rd_size;
@@ -317,9 +318,10 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex *&fft_of_rhogrid)
       int b;
       double start_k = 2. * M_PI * 0.95 / (All.BoxSize / 1e3);
       double kk;
-      double *pk_b, *pk_nub;
-      pk_b   = (double *)malloc(num_kbins * sizeof(double));
-      pk_nub = (double *)malloc(num_kbins * All.NNeutrino * sizeof(double));
+      double *pk_b, *pk_b_local, *pk_nub;
+      pk_b        = (double *)malloc(num_kbins * sizeof(double));
+      pk_b_local  = (double *)malloc(num_kbins * sizeof(double));
+      pk_nub      = (double *)malloc(num_kbins * All.NNeutrino * sizeof(double));
 
       /* initialise b arrays */
       k_array0[0] = start_k;
@@ -330,13 +332,15 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex *&fft_of_rhogrid)
 
       for(b = 0; b < num_kbins; b++)
         {
-          pk_b[b] = 0.;
+          pk_b[b]           = 0.;
+          pk_b_local[b]     = 0.;
           for(int i = 0; i < All.NNeutrino; i++)
             {
               pk_nub[b * All.NNeutrino] = 0.;
             }
-          count_b[b] = 0.;
-          k_array[b] = sqrt(k_array0[b] * k_array0[b + 1]);
+          count_b[b]        = 0.;
+          count_b_local[b]  = 0.;
+          k_array[b]        = sqrt(k_array0[b] * k_array0[b + 1]);
         }
       for(int i = 0; i < output_time_size; i++)
         {
@@ -404,11 +408,15 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex *&fft_of_rhogrid)
                 {
                   if(kk >= k_array0[b] && kk < k_array0[b + 1])
                     {
-                      count_b[b] = count_b[b] + 1.;
-                      pk_b[b] += (fft_of_rhogrid[ip][0] * fft_of_rhogrid[ip][0] + fft_of_rhogrid[ip][1] * fft_of_rhogrid[ip][1]);
+                      count_b_local[b] = count_b_local[b] + 1.;
+                      pk_b_local[b] += (fft_of_rhogrid[ip][0] * fft_of_rhogrid[ip][0] + fft_of_rhogrid[ip][1] * fft_of_rhogrid[ip][1]);
                     }
                 }
             }
+    
+      MPI_Allreduce(pk_b_local, pk_b, num_kbins, MPI_DOUBLE, MPI_SUM, Communicator);
+      MPI_Allreduce(count_b_local, count_b, num_kbins, MPI_DOUBLE, MPI_SUM, Communicator);
+
       if(All.NumCurrentTiStep == 0)
         {
           int rd;
@@ -581,5 +589,9 @@ void nusfr::NeutrinoPkGenerate(fft_plan &my_plan, fft_complex *&fft_of_rhogrid)
               printf("finished printing nu_pk.txt\n");
             }
         }
+
+      free(pk_b);
+      free(pk_b_local);
+      free(pk_nub);
     }
 }
